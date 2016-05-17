@@ -32,11 +32,11 @@ module tsdr-syslog-collector {
     augment "/config:modules/config:module/config:configuration" {
                 case tsdr-syslog-collector {
                     when "/config:modules/config:module/config:type = 'tsdr-syslog-collector'";
-                    container data-broker {
+                    container binding-aware-broker {
                         uses config:service-ref {
                             refine type {
                                 mandatory false;
-                                config:required-identity mdsal:binding-async-data-broker;
+                                config:required-identity mdsal:binding-broker-osgi-registry;
                             }
                         }
                     }
@@ -47,6 +47,12 @@ module tsdr-syslog-collector {
                                 config:required-identity mdsal:binding-rpc-registry;
                             }
                         }
+                    }
+                    leaf udpport {
+                        type uint16;
+                    }
+                    leaf tcpport {
+                        type uint16;
                     }
                 }
     }

@@ -42,7 +42,7 @@ public class ModuleCodeCoverageTest {
         setupModuleWithMocks(module2,"X");
         setupModuleWithMocks(module3,"Y");
         AutoCloseable c = module1.createInstance();
-        module1.getDataBroker();
+        module1.getBindingAwareBroker();
         module1.equals(new TSDRSyslogModule(null,null));
         module1.customValidation();
         module1.canReuseInstance(module2);
@@ -68,7 +68,7 @@ public class ModuleCodeCoverageTest {
         }
 
         module1.setRpcRegistry(null);
-        module1.setDataBroker(null);
+        module1.setBindingAwareBroker(null);
         try{
             c.close();
         }catch(Exception e){

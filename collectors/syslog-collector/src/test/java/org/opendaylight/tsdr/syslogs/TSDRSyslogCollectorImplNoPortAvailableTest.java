@@ -21,23 +21,15 @@ public class TSDRSyslogCollectorImplNoPortAvailableTest {
     @Test
     public void testFailToBindToPorts() throws IOException, InterruptedException {
         DatagramSocket socket1 = null;
-        DatagramSocket socket2 = null;
         //Just make sure the ports are occupied
         try{
-            socket1 = new DatagramSocket(TSDRSyslogCollectorImpl.SYSLOG_PORT);
+            socket1 = new DatagramSocket(TSDRSyslogCollectorImpl.UDP_PORT);
         }catch(Exception e){
-            /*Don't care */
-        }
-        try{
-            socket2 = new DatagramSocket(TSDRSyslogCollectorImpl.SYSLOG_BACKUP_PORT);
-        }catch(Exception e) {
             /*Don't care */
         }
         TSDRSyslogCollectorImpl impl = new  TSDRSyslogCollectorImpl(null);
         Assert.assertTrue(!impl.isRunning());
         if(socket1!=null)
             socket1.close();
-        if(socket2!=null)
-            socket2.close();
     }
 }

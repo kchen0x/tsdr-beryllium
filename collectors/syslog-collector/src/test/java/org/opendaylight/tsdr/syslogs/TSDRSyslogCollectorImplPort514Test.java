@@ -55,7 +55,8 @@ public class TSDRSyslogCollectorImplPort514Test {
 
     public void sendSysLog(String message) throws IOException {
         byte[] data = message.getBytes();
-        DatagramPacket packet = new DatagramPacket(data,data.length, InetAddress.getByName("127.0.0.1"),impl.getSelectedPort());
+        System.out.println(impl.getUdpPort());
+        DatagramPacket packet = new DatagramPacket(data,data.length, InetAddress.getByName("127.0.0.1"),impl.getUdpPort());
         socket.send(packet);
     }
 

@@ -42,7 +42,7 @@ public class TSDRSyslogCollectorImplPort1514Test {
         numberOfTests++;
         if(socket==null){
             try{
-                socket2 = new DatagramSocket(TSDRSyslogCollectorImpl.SYSLOG_PORT);
+                socket2 = new DatagramSocket(TSDRSyslogCollectorImpl.UDP_PORT);
             }catch(Exception e){
                 /*Dont care*/
             }
@@ -62,7 +62,7 @@ public class TSDRSyslogCollectorImplPort1514Test {
 
     public void sendSysLog(String message) throws IOException {
         byte[] data = message.getBytes();
-        DatagramPacket packet = new DatagramPacket(data,data.length, InetAddress.getByName("127.0.0.1"),impl.getSelectedPort());
+        DatagramPacket packet = new DatagramPacket(data,data.length, InetAddress.getByName("127.0.0.1"),impl.getUdpPort());
         socket.send(packet);
     }
 
