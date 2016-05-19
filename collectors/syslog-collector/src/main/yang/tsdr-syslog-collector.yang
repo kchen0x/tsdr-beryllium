@@ -56,4 +56,93 @@ module tsdr-syslog-collector {
                     }
                 }
     }
+        typedef severity-id {
+            type uint16 {
+                range 0..7;
+            }
+            description "Severity from 0 to 7";
+        }
+
+        typedef facility-id {
+            type uint16 {
+                range 0..23;
+            }
+            description "Facility from 0 to 23";
+        }
+
+        grouping meta-filter {
+            leaf severity {
+                type severity-id;
+            }
+            leaf facility {
+                type facility-id;
+            }
+            leaf sid {
+                type string;
+                default ".*";
+                description "Messageid of syslog";
+            }
+            leaf host {
+                type string;
+                default ".*";
+                description "Hostname of syslog";
+            }
+            leaf application {
+                type string;
+                default ".*";
+                description "Application name of syslog";
+            }
+            leaf pid{
+                type string;
+                default ".*";
+                description "Processid of syslog";
+            }
+            leaf content {
+                type string;
+                default ".*";
+                description "Content Body of syslog";
+            }
+        }
+
+
+        rpc register-filter {
+            description "register a specific severity, return a listener id to listen.";
+            input {
+                uses meta-filter;
+            }
+            output {
+                leaf listener-id {
+                    type string;
+                }
+            }
+        }
+
+        container syslog-dispatcher {
+            list syslog-filter {
+                config true;
+                key "filter-id";
+                leaf filter-id {
+                    type string;
+                }
+                container filter-entity {
+                    uses meta-filter;
+                }
+                list listener {
+                    key "listener-id";
+                    leaf listener-id {
+                        type string;
+                    }
+                }
+            }
+            list syslog-listener {
+                config false;
+                key "listener-id";
+                leaf listener-id {
+                    type string;
+                }
+                leaf syslog-message {
+                    type string;
+                }
+            }
+        }
 }

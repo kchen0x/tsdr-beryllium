@@ -7,6 +7,7 @@
  */
 package org.opendaylight.tsdr.syslogs;
 
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
 import org.opendaylight.controller.sal.binding.api.BindingAwareProvider;
 import org.opendaylight.tsdr.syslogs.filters.SyslogFilterManager;
@@ -16,8 +17,10 @@ import org.opendaylight.tsdr.syslogs.server.codec.Message;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.collector.spi.rev150915.InsertTSDRLogRecordInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.collector.spi.rev150915.TsdrCollectorSpiService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.collector.spi.rev150915.inserttsdrlogrecord.input.TSDRLogRecord;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.TsdrSyslogCollectorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.opendaylight.tsdr.syslogs.server.datastore.SyslogDatastoreManager;
 
 import java.net.DatagramSocket;
 import java.util.LinkedList;
@@ -46,6 +49,10 @@ public class TSDRSyslogCollectorImpl extends Thread implements BindingAwareProvi
     private long lastPersisted = System.currentTimeMillis();
     private int udpPort = -1;
     private int tcpPort = -1;
+
+    private DataBroker dataBroker;
+    private SyslogDatastoreManager manager;
+    private BindingAwareBroker.RpcRegistration<TsdrSyslogCollectorService> syslogsvrService;
 
     /***
      * constructor of collector
@@ -77,6 +84,16 @@ public class TSDRSyslogCollectorImpl extends Thread implements BindingAwareProvi
     @Override
     public void onSessionInitiated(BindingAwareBroker.ProviderContext session) {
         this.setDaemon(true);
+
+        //set the datastore manager
+
+        this.dataBroker=session.getSALService(DataBroker.class);
+        this.manager=SyslogDatastoreManager.getInstance();
+        manager.setDataBroker(dataBroker);
+        logger.info("Datastore Manager Setup Done");
+        this.syslogsvrService = session.addRpcImplementation(TsdrSyslogCollectorService.class, manager);
+        logger.info("Register SyslogsvrService to Session.");
+        
         logger.info("Syslog Collector Session Initiated");
         this.udpPort = this.udpPort != -1 ?
                 this.udpPort : UDP_PORT;

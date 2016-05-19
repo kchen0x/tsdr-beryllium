@@ -14,6 +14,7 @@ import io.netty.channel.socket.DatagramPacket;
 import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.opendaylight.tsdr.syslogs.server.datastore.SyslogDatastoreManager;
 
 import java.util.LinkedList;
 //import org.opendaylight.tsdr.syslogs.datastore.SyslogDatastoreManager;
@@ -22,7 +23,7 @@ import java.util.LinkedList;
  * Created by lvlng on 16-1-7.
  */
 public class UDPMessageHandler extends SimpleChannelInboundHandler<DatagramPacket> {
-    //private SyslogDatastoreManager manager = SyslogDatastoreManager.getInstance();
+    private SyslogDatastoreManager manager = SyslogDatastoreManager.getInstance();
     //private LinkedList<DatagramPacket> incomingSyslogs = null;
     private LinkedList<Message> incomingSyslogs = null;
     private final static Logger LOGGER = LoggerFactory.getLogger(UDPMessageHandler.class);
@@ -36,7 +37,7 @@ public class UDPMessageHandler extends SimpleChannelInboundHandler<DatagramPacke
         String s = msg.content().toString(CharsetUtil.UTF_8);
         LOGGER.info("===KUN===Received message: "+s);
         String ipaddress = msg.sender().getAddress().getHostAddress();
-        //manager.execute(ipaddress,s);
+        manager.execute(ipaddress,s);
         Message message =  new Message.MessageBuilder().create()
                 .content(s)
                 .hostname(ipaddress)
