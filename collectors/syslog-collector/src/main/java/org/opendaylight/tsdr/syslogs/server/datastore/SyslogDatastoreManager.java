@@ -270,7 +270,7 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
                 for (SyslogFilter filter : filters) {
                     MessageFilter messageFilter = MessageFilter.FilterBuilder.create(filter.getFilterEntity());
                     LOG.info("before equals");
-                    if (true){//messageFilter.equals(msg)) {
+                    if （messageFilter.equals(msg)) {
                         //Match
                         LOG.info("after equals");
                         nodes.addAll(getListenerList(filter.getFilterId()));
@@ -278,7 +278,7 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
                 }
             }
             update(nodes);
-            LOG.info("datastore write  successful");
+          
         }
     }
 }
