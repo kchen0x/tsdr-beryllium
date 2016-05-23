@@ -84,7 +84,6 @@ public class  SyslogUDPServer implements SyslogServer {
 
 
     public void setIncomingSyslogs(LinkedList<Message> incomingSyslogs) {
-        LOGGER.info("===KUN===server get the list");
         this.incomingSyslogs = incomingSyslogs;
     }
 }

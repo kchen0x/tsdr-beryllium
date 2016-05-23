@@ -21,21 +21,16 @@ import java.util.LinkedList;
 
 /**
  * Created by lvlng on 16-1-7.
+ * @author lvlng(huwenbo1988@gmail.com)
+ * @author Quentin Chen(quentin.chen@foxmail.com)
  */
 public class UDPMessageHandler extends SimpleChannelInboundHandler<DatagramPacket> {
     private SyslogDatastoreManager manager = SyslogDatastoreManager.getInstance();
-    //private LinkedList<DatagramPacket> incomingSyslogs = null;
     private LinkedList<Message> incomingSyslogs = null;
-    private final static Logger LOGGER = LoggerFactory.getLogger(UDPMessageHandler.class);
-
-//    public UDPMessageHandler(LinkedList<DatagramPacket> incomingSyslogs) {
-//        this.incomingSyslogs = incomingSyslogs;
-//    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
         String s = msg.content().toString(CharsetUtil.UTF_8);
-        LOGGER.info("===KUN===Received message: "+s);
         String ipaddress = msg.sender().getAddress().getHostAddress();
         manager.execute(ipaddress,s);
         Message message =  new Message.MessageBuilder().create()
@@ -43,11 +38,9 @@ public class UDPMessageHandler extends SimpleChannelInboundHandler<DatagramPacke
                 .hostname(ipaddress)
                 .build();
         incomingSyslogs.add(message);
-        LOGGER.info("===KUN===message added into list");
     }
 
     public void setIncomingSyslogs(LinkedList<Message> incomingSyslogs) {
-        LOGGER.info("===KUN===handler get the list");
         this.incomingSyslogs = incomingSyslogs;
     }
 }

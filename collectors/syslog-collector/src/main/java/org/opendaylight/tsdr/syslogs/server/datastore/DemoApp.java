@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2016 Cisco Systems, Inc. and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+
 package org.opendaylight.tsdr.syslogs.server.datastore;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
@@ -19,7 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
- * Created by lailailai on 5/11/16.
+ * Created by lvlng on 16-1-13.
  */
 
 public class DemoApp implements DataChangeListener {
@@ -71,7 +79,6 @@ public class DemoApp implements DataChangeListener {
         InstanceIdentifier<SyslogListener> iid = this.toInstanceIdentifier(this.listenerId);
         SyslogListener listener = (SyslogListener) change.getUpdatedData().get(iid);
         if (listener != null) {
-            LOG.info("get updated message from "+listener.getListenerId());
             LOG.info(listener.getSyslogMessage());
         }
 

@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2016 Cisco Systems, Inc. and others.  All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+
 package org.opendaylight.tsdr.syslogs.server.datastore;
 
 import org.opendaylight.tsdr.syslogs.server.codec.Message;
@@ -6,7 +14,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controll
 import java.util.regex.Pattern;
 
 /**
- * Created by lailailai on 5/10/16.
+ * Created by lvlng on 16-1-15.
  */
 
 public class MessageFilter {
@@ -84,5 +92,4 @@ public class MessageFilter {
             return new MessageFilter(facility, severity, hostname, applicationName, processId, sequenceId, content);
         }
     }
-
 }
