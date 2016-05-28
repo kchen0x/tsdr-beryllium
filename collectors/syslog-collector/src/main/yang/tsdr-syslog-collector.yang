@@ -56,7 +56,7 @@ module tsdr-syslog-collector {
                     }
                 }
     }
-        typedef severity-id {
+      typedef severity-id {
             type uint16 {
                 range 0..7;
             }
@@ -102,6 +102,7 @@ module tsdr-syslog-collector {
                 default ".*";
                 description "Content Body of syslog";
             }
+
         }
 
 
@@ -109,6 +110,10 @@ module tsdr-syslog-collector {
             description "register a specific severity, return a listener id to listen.";
             input {
                 uses meta-filter;
+                leaf callback-url{
+                       type string;
+                       description "the callback URL of your app ";
+                }
             }
             output {
                 leaf listener-id {
@@ -117,7 +122,34 @@ module tsdr-syslog-collector {
             }
         }
 
-        container syslog-dispatcher {
+         rpc show-register-filter {
+
+                  description "show registered filter";
+                    output {
+                          list registered-syslog-filter {
+
+                                          key "filter-id";
+                                          leaf filter-id {
+                                              type string;
+                                          }
+                                          leaf callback-url{
+                                                type string;
+                                          }
+                                          container registered-filter-entity {
+                                              uses meta-filter;
+                                          }
+                          }
+                    }
+                }
+
+
+
+
+
+
+
+
+          container syslog-dispatcher {
             list syslog-filter {
                 config true;
                 key "filter-id";
@@ -126,6 +158,9 @@ module tsdr-syslog-collector {
                 }
                 container filter-entity {
                     uses meta-filter;
+                }
+                leaf callback-url{
+                     type string;
                 }
                 list listener {
                     key "listener-id";
@@ -145,4 +180,19 @@ module tsdr-syslog-collector {
                 }
             }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
