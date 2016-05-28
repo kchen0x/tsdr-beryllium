@@ -362,7 +362,7 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
                         nodes.addAll(getListenerList(filter.getFilterId()));
 
                     }else {
-                        LOG.info("mismatch, very sorry");
+                        LOG.info("mismatch");
                     }
                 }
             }
