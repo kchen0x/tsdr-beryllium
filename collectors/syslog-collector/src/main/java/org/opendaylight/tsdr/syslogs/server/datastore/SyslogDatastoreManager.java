@@ -2,7 +2,6 @@ package org.opendaylight.tsdr.syslogs.server.datastore;
 
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
-
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -20,7 +19,6 @@ import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.tsdr.syslogs.server.codec.Message;
 import org.opendaylight.tsdr.syslogs.server.codec.MessageDecoder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.*;
-
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.show.register.filter.output.RegisteredSyslogFilter;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.show.register.filter.output.RegisteredSyslogFilterBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.show.register.filter.output.registered.syslog.filter.RegisteredFilterEntity;
@@ -33,7 +31,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controll
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.syslog.dispatcher.syslog.filter.FilterEntityBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.syslog.dispatcher.syslog.filter.Listener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.syslog.dispatcher.syslog.filter.ListenerKey;
-
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
@@ -54,8 +51,6 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
     private final ExecutorService threadpool;
     private DataBroker db;
     private String listenerId;
-
-
 
     private SyslogDatastoreManager() {
         this.db = null;
@@ -80,16 +75,6 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
         INSTANCE.threadpool.execute(new WorkerThread(mid, ipaddress, message));
     }
 
-//    private void initializeDataTree() {
-//        LOG.info("FM: Preparing to initialize the greeting registry");
-//        WriteTransaction transaction = db.newWriteOnlyTransaction();
-//        InstanceIdentifier<SyslogData> iid = InstanceIdentifier.create(SyslogData.class);
-//        SyslogData syslogdata = new SyslogDataBuilder()
-//                .build();
-//        transaction.put(LogicalDatastoreType.OPERATIONAL, iid, syslogdata);
-//        transaction.submit();
-//    }
-
     private void initializeDataTree() {
         LOG.info("Preparing to initialize the greeting registry");
         WriteTransaction transaction = db.newWriteOnlyTransaction();
@@ -106,20 +91,16 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
         WriteTransaction transaction = db.newWriteOnlyTransaction();
         InstanceIdentifier<SyslogFilter> filterIID = InstanceIdentifier.create(SyslogDispatcher.class)
                 .child(SyslogFilter.class, new SyslogFilterKey(input.getFilterId()));
-
         transaction.delete(LogicalDatastoreType.CONFIGURATION,filterIID);
 
-
-
-
-           try{
-               transaction.submit().get();
+        try{
+            transaction.submit().get();
            }catch (Exception e) {
-                  LOG.info("filter delete failed");
-                  DeleteRegisteredFilterOutput output = new DeleteRegisteredFilterOutputBuilder()
+            LOG.info("filter delete failed");
+            DeleteRegisteredFilterOutput output = new DeleteRegisteredFilterOutputBuilder()
                           .setResult("filter delete failed")
                           .build();
-                 return RpcResultBuilder.success(output).buildFuture() ;
+            return RpcResultBuilder.success(output).buildFuture() ;
            }
 
             DeleteRegisteredFilterOutput output = new DeleteRegisteredFilterOutputBuilder()
@@ -162,7 +143,6 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
                         .setSeverity(filter.getFilterEntity().getSeverity())
                         .build();
 
-
                 RegisteredSyslogFilter filter1= new RegisteredSyslogFilterBuilder()
                         .setFilterId(filter.getFilterId())
                         .setRegisteredFilterEntity(registeredFilterEntity)
@@ -174,17 +154,11 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
                     .setRegisteredSyslogFilter(registeredSyslogFiltersList)
                     .build();
 
-
             return RpcResultBuilder.success(output).buildFuture();
-
-
         } else {
-
+            LOG.info("there are no available registered filters");
+            return null;
         }
-        // ShowRegisterFilterOutput output1 = new ShowRegisterFilterOutputBuilder()
-        //.setFilterId("32").build();
-        //return RpcResultBuilder.success(output1).buildFuture();
-        return null;
     }
 
     @Override
@@ -195,7 +169,6 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
         WriteTransaction transaction = db.newWriteOnlyTransaction();
         String filterID = UUID.randomUUID().toString();
         String listenerUUID = UUID.randomUUID().toString();
-
         //Create filter node
         FilterEntity filterEntity = new FilterEntityBuilder()
                 .setSeverity(input.getSeverity())
@@ -270,11 +243,7 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
             LOG.info("main get updated message from " + listener.getListenerId());
             LOG.info("main received message "+listener.getSyslogMessage());
         }
-
-
-
     }
-
 
     class WorkerThread implements Runnable {
         private final int mid;
@@ -336,8 +305,6 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
             }
         }
 
-
-
         private List<Listener> getListenerList(String filterID) {
             ReadTransaction transaction = db.newReadOnlyTransaction();
             InstanceIdentifier<SyslogFilter> iid = InstanceIdentifier.create(SyslogDispatcher.class)
@@ -396,7 +363,6 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
                 }
             }
             update(nodes);
-
         }
     }
 }
