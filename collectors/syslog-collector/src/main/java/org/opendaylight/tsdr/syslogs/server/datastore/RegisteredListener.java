@@ -8,6 +8,7 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.syslog.dispatcher.SyslogListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.syslog.dispatcher.SyslogListenerKey;
+import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
@@ -46,8 +47,10 @@ public class RegisteredListener implements DataChangeListener {
 
     public void listen() {
         InstanceIdentifier<SyslogListener> iid = this.toInstanceIdentifier(this.listenerId);
-        db.registerDataChangeListener(LogicalDatastoreType.OPERATIONAL, iid,
+        ListenerRegistration<DataChangeListener> a =db.registerDataChangeListener(LogicalDatastoreType.OPERATIONAL, iid,
                 this, AsyncDataBroker.DataChangeScope.SUBTREE);
+
+
     }
 
     @Override
@@ -76,7 +79,7 @@ public class RegisteredListener implements DataChangeListener {
                     out.flush();
                     out.close();
                     int responseCode = ((HttpURLConnection) urlConnection).getResponseCode();
-                    if (HttpURLConnection.HTTP_OK == responseCode) {// 连接成功
+                    if (HttpURLConnection.HTTP_OK == responseCode) {
                         String readLine;
                         BufferedReader responseReader;
                         responseReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));

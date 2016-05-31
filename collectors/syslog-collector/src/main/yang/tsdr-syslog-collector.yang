@@ -142,6 +142,23 @@ module tsdr-syslog-collector {
                     }
                 }
 
+         rpc delete-registered-filter{
+                 description "delete registered filter";
+
+                   input {
+                                 leaf filter-id{
+                                     type string;
+
+                                 }
+                             }
+
+                   output {
+                                 leaf result {
+                                     type string;
+                                 }
+                             }
+         }
+
 
 
 
