@@ -12,7 +12,6 @@ import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.ReadTransaction;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
-import org.opendaylight.controller.md.sal.common.api.data.AsyncDataBroker;
 import org.opendaylight.controller.md.sal.common.api.data.AsyncDataChangeEvent;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
@@ -31,7 +30,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controll
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.syslog.dispatcher.syslog.filter.FilterEntityBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.syslog.dispatcher.syslog.filter.Listener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.syslog.dispatcher.syslog.filter.ListenerKey;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -123,7 +121,8 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
         } catch (ReadFailedException e) {
             LOG.warn("Reading Filter failed:", e);
         }
-        if (optional.isPresent()) {
+        if (optional.isPresent()&&!(optional.get().getSyslogFilter().isEmpty())) {
+
             LOG.info("reading filter success");
 
             List<SyslogFilter> filters = optional.get().getSyslogFilter();
@@ -151,13 +150,18 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
                 registeredSyslogFiltersList.add(filter1);
             }
             ShowRegisterFilterOutput output = new ShowRegisterFilterOutputBuilder()
+                    .setResult("registered filters are:")
                     .setRegisteredSyslogFilter(registeredSyslogFiltersList)
                     .build();
 
             return RpcResultBuilder.success(output).buildFuture();
         } else {
+
             LOG.info("there are no available registered filters");
-            return null;
+            ShowRegisterFilterOutput output = new ShowRegisterFilterOutputBuilder()
+                    .setResult("no registered filter")
+                    .build();
+            return  RpcResultBuilder.success(output).buildFuture();
         }
     }
 
@@ -165,7 +169,7 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
     public Future<RpcResult<RegisterFilterOutput>> registerFilter(RegisterFilterInput input) {
 
         LOG.info("Received a new Resgister!!!");
-        String url= input.getCallbackUrl();
+        String url = input.getCallbackUrl();
         WriteTransaction transaction = db.newWriteOnlyTransaction();
         String filterID = UUID.randomUUID().toString();
         String listenerUUID = UUID.randomUUID().toString();
@@ -227,13 +231,13 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
         return iid;
     }
 
-    private void listen() {
+    /*private void listen() {
 
         InstanceIdentifier<SyslogListener> iid = this.toInstanceIdentifier(this.listenerId);
         db.registerDataChangeListener(LogicalDatastoreType.OPERATIONAL, iid,
                 this, AsyncDataBroker.DataChangeScope.SUBTREE);
 
-    }
+    }*/
 
     @Override
     public void onDataChanged(AsyncDataChangeEvent<InstanceIdentifier<?>, DataObject> change) {
@@ -254,36 +258,7 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
             this.mid = mid;
             this.ipaddr = ipaddr;
             this.message = message;
-
         }
-
-//        private InstanceIdentifier<SyslogDataEntry> toInstanceIdentifier(String str_sequenceid) {
-//            InstanceIdentifier<SyslogDataEntry> iid = InstanceIdentifier.create(SyslogData.class)
-//                    .child(SyslogDataEntry.class, new SyslogDataEntryKey(str_sequenceid));
-//            return iid;
-//        }
-//
-//        private void writeToSyslogDataEntry() {
-//            if (mid % 1000 == 0) {
-//                LOG.info("Datastore has put " + mid + " nodes.");
-//            }
-//            WriteTransaction transaction = INSTANCE.db.newWriteOnlyTransaction();
-//            String str_sequenceid = String.valueOf(mid);
-//            InstanceIdentifier<SyslogDataEntry> iid = toInstanceIdentifier(str_sequenceid);
-//
-//            SyslogDataEntry data_entry = new SyslogDataEntryBuilder()
-//                    .setIpaddr(ipaddr)
-//                    .setMessage(message)
-//                    .setSyslogId(str_sequenceid)
-//                    .build();
-//
-//            transaction.put(LogicalDatastoreType.OPERATIONAL, iid, data_entry);
-//            try {
-//                transaction.submit().checkedGet();
-//            } catch (TransactionCommitFailedException e) {
-//                e.printStackTrace();
-//            }
-//        }
 
         public List<SyslogFilter> getFilters() {
             ReadTransaction transaction = db.newReadOnlyTransaction();
@@ -356,7 +331,6 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
                         //Match
                         LOG.info("match meet");
                         nodes.addAll(getListenerList(filter.getFilterId()));
-
                     }else {
                         LOG.info("mismatch");
                     }
