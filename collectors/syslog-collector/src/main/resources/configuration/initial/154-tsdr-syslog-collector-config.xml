@@ -26,6 +26,11 @@
                     </binding-aware-broker>
                     <udpport>8089</udpport>
                     <tcpport>8088</tcpport>
+                    <core-threadpool-size>5</core-threadpool-size>
+                    <max-threadpool-size>10</max-threadpool-size>
+                    <keep-alive-time>10</keep-alive-time>
+                    <queue-size>20</queue-size>
+
                 </module>
             </modules>
         </data>

@@ -39,7 +39,6 @@ public class MessageFilter {
         this.content = content;
     }
 
-
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Message) {
