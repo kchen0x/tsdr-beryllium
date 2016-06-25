@@ -49,6 +49,10 @@ public class TSDRSyslogCollectorImpl extends Thread implements BindingAwareProvi
     private long lastPersisted = System.currentTimeMillis();
     private int udpPort = -1;
     private int tcpPort = -1;
+    private int coreThreadPoolSize = 5;
+    private int maxThreadPoolSize = 10;
+    private long keepAliveTime = 10L;
+    private int queueSize = 10;
 
     private DataBroker dataBroker;
     private SyslogDatastoreManager manager;
@@ -73,6 +77,22 @@ public class TSDRSyslogCollectorImpl extends Thread implements BindingAwareProvi
         this.tcpPort = tcpPort;
     }
 
+    public void setCoreThreadPoolSize(int coreThreadPoolSize) {
+        this.coreThreadPoolSize  = coreThreadPoolSize;
+    }
+
+    public void setKeepAliveTime(long keepAliveTime) {
+        this.keepAliveTime = keepAliveTime;
+    }
+
+    public void setMaxThreadPoolSize(int maxThreadPoolSize) {
+        this.maxThreadPoolSize = maxThreadPoolSize;
+    }
+
+    public void setQueueSize(int queueSize) {
+        this.queueSize = queueSize;
+    }
+
     public boolean isRunning(){
         return this.running;
     }
@@ -94,8 +114,8 @@ public class TSDRSyslogCollectorImpl extends Thread implements BindingAwareProvi
         //for unit test, this part should be annotated
 
         this.dataBroker=session.getSALService(DataBroker.class);
-
-        this.manager.setDataBroker(dataBroker);
+        this.manager=SyslogDatastoreManager.getInstance(coreThreadPoolSize,maxThreadPoolSize,keepAliveTime,queueSize);
+        manager.setDataBroker(dataBroker);
         logger.info("Datastore Manager Setup Done");
         this.syslogsvrService = session.addRpcImplementation(TsdrSyslogCollectorService.class, manager);
         logger.info("Register SyslogsvrService to Session.");

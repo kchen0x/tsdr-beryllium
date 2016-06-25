@@ -20,8 +20,6 @@ import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -57,7 +55,6 @@ public class RegisteredListener implements DataChangeListener {
         ListenerRegistration<DataChangeListener> a =db.registerDataChangeListener(LogicalDatastoreType.OPERATIONAL, iid,
                 this, AsyncDataBroker.DataChangeScope.SUBTREE);
 
-
     }
 
     @Override
@@ -77,11 +74,8 @@ public class RegisteredListener implements DataChangeListener {
                     urlConnection.setDoInput(true);
 
                     urlConnection.setRequestProperty("content-type", "application/x-www-form-urlencoded");
-
                     OutputStreamWriter out = new OutputStreamWriter(urlConnection.getOutputStream());
-
                     out.write("received updated message "+listener.getSyslogMessage());
-
 
                     out.flush();
                     out.close();
@@ -95,7 +89,6 @@ public class RegisteredListener implements DataChangeListener {
                         }
                         responseReader.close();
                     }
-
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

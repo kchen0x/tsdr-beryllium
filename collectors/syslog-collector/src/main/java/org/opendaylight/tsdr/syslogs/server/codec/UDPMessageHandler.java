@@ -32,7 +32,6 @@ public class UDPMessageHandler extends SimpleChannelInboundHandler<DatagramPacke
     protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
         String s = msg.content().toString(CharsetUtil.UTF_8);
         String ipaddress = msg.sender().getAddress().getHostAddress();
-        //TODO implement proper decoder to create new message
         Message message =  new Message.MessageBuilder().create()
                 .content(s)
                 .hostname(ipaddress)

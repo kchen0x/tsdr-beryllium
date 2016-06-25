@@ -41,6 +41,10 @@ public class TSDRSyslogModule extends org.opendaylight.controller.config.yang.co
 
         impl.setUdpPort(getUdpport());
         impl.setTcpPort(getTcpport());
+        impl.setCoreThreadPoolSize(getCoreThreadpoolSize());
+        impl.setKeepAliveTime(getKeepAliveTime());
+        impl.setQueueSize(getQueueSize());
+        impl.setMaxThreadPoolSize(getMaxThreadpoolSize());
 
 //        getRpcRegistryDependency().addRpcImplementation(TsdrCollectorSpiService.class, impl);
         getBindingAwareBrokerDependency().registerProvider(impl,null);

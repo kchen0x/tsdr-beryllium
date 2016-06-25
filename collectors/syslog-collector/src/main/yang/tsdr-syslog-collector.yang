@@ -54,6 +54,15 @@ module tsdr-syslog-collector {
                     leaf tcpport {
                         type uint16;
                     }
+                    leaf core-threadpool-size{
+                        type uint16;
+                    }leaf max-threadpool-size{
+                        type uint16;
+                    }leaf keep-alive-time{
+                        type uint16;
+                    }leaf queue-size{
+                        type uint16;
+                    }
                 }
     }
       typedef severity-id {
@@ -105,8 +114,7 @@ module tsdr-syslog-collector {
 
         }
 
-
-        rpc register-filter {
+         rpc register-filter {
             description "register a specific severity, return a listener id to listen.";
             input {
                 uses meta-filter;
@@ -120,12 +128,14 @@ module tsdr-syslog-collector {
                     type string;
                 }
             }
-        }
+         }
 
          rpc show-register-filter {
-
-                  description "show registered filter";
+                 description "show registered filter";
                     output {
+                          leaf result{
+                              type string;
+                          }
                           list registered-syslog-filter {
 
                                           key "filter-id";
@@ -159,14 +169,59 @@ module tsdr-syslog-collector {
                              }
          }
 
+         rpc show-threadpool-configuration{
+
+                   output{
+                              leaf queue-remaining-capacity{
+                                    type uint16;
+                              }
+                              leaf queue-used-capacity{
+                                    type uint16;
+                              }
+                              leaf keep-alive-time{
+                                    type uint16;
+                                    description "Time Unit: Second";
+                              }
+                              leaf current-alive-thread-number{
+                                    type uint16;
+                              }
+                              leaf core-thread-number{
+                                    type uint16;
+                              }
+                              leaf Max-thread-number{
+                                    type uint16;
+                              }
 
 
+                          }
+         }
+
+         rpc config-threadpool{
+                   input{
+                            leaf core-thread-number{
+                                    type uint16;
+                             }
+                            leaf max-thread-number{
+                                    type uint16;
+                             }
+                            leaf keep-alive-time{
+                                    type uint16;
+                             }
+
+                        }
+
+                   output{
+
+                           leaf result{
+                              type string;
+                           }
 
 
+                   }
+         }
 
 
-
-          container syslog-dispatcher {
+      container syslog-dispatcher {
             list syslog-filter {
                 config true;
                 key "filter-id";
@@ -197,19 +252,4 @@ module tsdr-syslog-collector {
                 }
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

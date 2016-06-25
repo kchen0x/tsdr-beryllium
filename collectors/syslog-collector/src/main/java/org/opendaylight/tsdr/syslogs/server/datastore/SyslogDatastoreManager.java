@@ -11,16 +11,12 @@ package org.opendaylight.tsdr.syslogs.server.datastore;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.CheckedFuture;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.ReadTransaction;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
-import org.opendaylight.controller.md.sal.common.api.data.AsyncDataBroker;
 import org.opendaylight.controller.md.sal.common.api.data.AsyncDataChangeEvent;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
@@ -39,7 +35,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controll
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.syslog.dispatcher.syslog.filter.FilterEntityBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.syslog.dispatcher.syslog.filter.Listener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.syslog.collector.rev151007.syslog.dispatcher.syslog.filter.ListenerKey;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -53,20 +48,29 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controll
  * Created by lailailai on 5/10/16.
  */
 public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataChangeListener {
-    private static SyslogDatastoreManager INSTANCE = new SyslogDatastoreManager();
+    private static SyslogDatastoreManager INSTANCE;
     private static final Logger LOG = LoggerFactory.getLogger(TsdrSyslogCollectorService.class);
     private static AtomicInteger messageID = new AtomicInteger(0);
-    private final ExecutorService threadpool;
+    private final ThreadPoolExecutor threadpool;
     private DataBroker db;
     private String listenerId;
 
-    private SyslogDatastoreManager() {
+    private SyslogDatastoreManager(int coreThreadPoolSize,int maxThreadpoolSize,long keepAliveTime,int queueSize) {
         this.db = null;
-        this.threadpool = Executors.newCachedThreadPool();
+        //this.threadpool = Executors.newCachedThreadPool();
+        //Executors.newFixedThreadPool()
+        this.threadpool= new ThreadPoolExecutor(coreThreadPoolSize, maxThreadpoolSize, keepAliveTime, TimeUnit.SECONDS,new ArrayBlockingQueue<Runnable>(queueSize));
+        this.threadpool.prestartAllCoreThreads();
     }
 
     public static SyslogDatastoreManager getInstance() {
         return INSTANCE;
+    }
+
+    public static SyslogDatastoreManager getInstance(int coreThreadPoolSize,int maxThreadpoolSize,long keepAliveTime,int queueSize){
+        INSTANCE = new SyslogDatastoreManager(coreThreadPoolSize,maxThreadpoolSize,keepAliveTime,queueSize);
+        return INSTANCE;
+
     }
 
     public void setDataBroker(DataBroker db) {
@@ -94,6 +98,30 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
     }
 
     @Override
+    public Future<RpcResult<ShowThreadpoolConfigurationOutput>> showThreadpoolConfiguration() {
+
+        
+        int currentThreadpoolQueueSize = threadpool.getQueue().size();
+        int currentThreadpoolQueueRemainingCapacity = threadpool.getQueue().remainingCapacity();
+        long currentThreadpoolKeepAliveTime = threadpool.getKeepAliveTime(TimeUnit.SECONDS);
+
+        System.out.println("currentThreadpoolKeepAliveTime"+currentThreadpoolKeepAliveTime);
+        System.out.println("currentThreadpoolQueueSize"+currentThreadpoolQueueSize);
+        System.out.println("currentThreadpoolQueueRemainingCapacity"+currentThreadpoolQueueRemainingCapacity);
+
+        ShowThreadpoolConfigurationOutput output = new ShowThreadpoolConfigurationOutputBuilder()
+                .setCoreThreadNumber(threadpool.getCorePoolSize())
+                .setMaxThreadNumber(threadpool.getMaximumPoolSize())
+                .setCurrentAliveThreadNumber(threadpool.getPoolSize())
+                .setKeepAliveTime((int)(currentThreadpoolKeepAliveTime))
+                .setQueueRemainingCapacity(currentThreadpoolQueueRemainingCapacity)
+                .setQueueUsedCapacity(currentThreadpoolQueueSize)
+                .build();
+
+        return RpcResultBuilder.success(output).buildFuture();
+    }
+
+    @Override
     public Future<RpcResult<DeleteRegisteredFilterOutput>> deleteRegisteredFilter(DeleteRegisteredFilterInput input) {
 
         WriteTransaction transaction = db.newWriteOnlyTransaction();
@@ -116,6 +144,27 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
                     .build();
             return RpcResultBuilder.success(output).buildFuture();
     }
+/*
+    @Override
+    public Future<RpcResult<ShowThreadpoolSizeOutput>> showThreadpoolSize() {
+
+        int currentThreadpoolSize = threadpool.getPoolSize();
+        int currentThreadpoolQueueSize = threadpool.getQueue().size();
+        int currentThreadpoolQueueRemainingCapacity = threadpool.getQueue().remainingCapacity();
+        long currentThreadpoolKeepAliveTime = threadpool.getKeepAliveTime(TimeUnit.SECONDS);
+
+        System.out.println("currentThreadpoolKeepAliveTime"+currentThreadpoolKeepAliveTime);
+        System.out.println("currentThreadpoolQueueSize"+currentThreadpoolQueueSize);
+        System.out.println("currentThreadpoolQueueRemainingCapacity"+currentThreadpoolQueueRemainingCapacity);
+
+        ShowThreadpoolSizeOutput output = new ShowThreadpoolSizeOutputBuilder()
+                .setThreadNumber(currentThreadpoolSize)
+                .build();
+
+        return RpcResultBuilder.success(output).buildFuture();
+    }
+    */
+
 
     @Override
     public Future<RpcResult<ShowRegisterFilterOutput>> showRegisterFilter() {
@@ -131,7 +180,8 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
         } catch (ReadFailedException e) {
             LOG.warn("Reading Filter failed:", e);
         }
-        if (optional.isPresent()) {
+        if (optional.isPresent()&&!(optional.get().getSyslogFilter().isEmpty())) {
+
             LOG.info("reading filter success");
 
             List<SyslogFilter> filters = optional.get().getSyslogFilter();
@@ -159,21 +209,47 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
                 registeredSyslogFiltersList.add(filter1);
             }
             ShowRegisterFilterOutput output = new ShowRegisterFilterOutputBuilder()
+                    .setResult("registered filters are:")
                     .setRegisteredSyslogFilter(registeredSyslogFiltersList)
                     .build();
 
             return RpcResultBuilder.success(output).buildFuture();
         } else {
+
             LOG.info("there are no available registered filters");
-            return null;
+            ShowRegisterFilterOutput output = new ShowRegisterFilterOutputBuilder()
+                    .setResult("no registered filter")
+                    .build();
+            return  RpcResultBuilder.success(output).buildFuture();
         }
+    }
+
+    @Override
+    public Future<RpcResult<ConfigThreadpoolOutput>> configThreadpool(ConfigThreadpoolInput input) {
+
+        if (input.getCoreThreadNumber()!=0){
+            threadpool.setCorePoolSize(input.getCoreThreadNumber());
+        }
+
+        if (input.getMaxThreadNumber()!=0){
+            threadpool.setMaximumPoolSize(input.getMaxThreadNumber());
+        }
+        if (input.getKeepAliveTime()!=0){
+
+            threadpool.setKeepAliveTime(input.getKeepAliveTime(),TimeUnit.SECONDS);
+        }
+        ConfigThreadpoolOutput output = new ConfigThreadpoolOutputBuilder()
+                .setResult("success")
+                .build();
+
+        return RpcResultBuilder.success(output).buildFuture();
     }
 
     @Override
     public Future<RpcResult<RegisterFilterOutput>> registerFilter(RegisterFilterInput input) {
 
         LOG.info("Received a new Resgister!!!");
-        String url= input.getCallbackUrl();
+        String url = input.getCallbackUrl();
         WriteTransaction transaction = db.newWriteOnlyTransaction();
         String filterID = UUID.randomUUID().toString();
         String listenerUUID = UUID.randomUUID().toString();
@@ -228,6 +304,18 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
         // this.listen();
         return RpcResultBuilder.success(output).buildFuture();
     }
+/*
+    @Override
+    public Future<RpcResult<ConfigThreadpoolSizeOutput>> configThreadpoolSize(ConfigThreadpoolSizeInput input) {
+        threadpool.setCorePoolSize(input.getThreadNumberYouWantToConfig());
+
+        ConfigThreadpoolSizeOutput output = new ConfigThreadpoolSizeOutputBuilder()
+                .setResult("success")
+                .build();
+        return RpcResultBuilder.success(output).buildFuture();
+
+    }
+    */
 
     private InstanceIdentifier<SyslogListener> toInstanceIdentifier(String listenerId) {
         InstanceIdentifier<SyslogListener> iid = InstanceIdentifier.create(SyslogDispatcher.class)
@@ -235,13 +323,14 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
         return iid;
     }
 
-    private void listen() {
+
+    /*private void listen() {
 
         InstanceIdentifier<SyslogListener> iid = this.toInstanceIdentifier(this.listenerId);
         db.registerDataChangeListener(LogicalDatastoreType.OPERATIONAL, iid,
                 this, AsyncDataBroker.DataChangeScope.SUBTREE);
 
-    }
+    }*/
 
     @Override
     public void onDataChanged(AsyncDataChangeEvent<InstanceIdentifier<?>, DataObject> change) {
@@ -262,36 +351,7 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
             this.mid = mid;
             this.ipaddr = ipaddr;
             this.message = message;
-
         }
-
-//        private InstanceIdentifier<SyslogDataEntry> toInstanceIdentifier(String str_sequenceid) {
-//            InstanceIdentifier<SyslogDataEntry> iid = InstanceIdentifier.create(SyslogData.class)
-//                    .child(SyslogDataEntry.class, new SyslogDataEntryKey(str_sequenceid));
-//            return iid;
-//        }
-//
-//        private void writeToSyslogDataEntry() {
-//            if (mid % 1000 == 0) {
-//                LOG.info("Datastore has put " + mid + " nodes.");
-//            }
-//            WriteTransaction transaction = INSTANCE.db.newWriteOnlyTransaction();
-//            String str_sequenceid = String.valueOf(mid);
-//            InstanceIdentifier<SyslogDataEntry> iid = toInstanceIdentifier(str_sequenceid);
-//
-//            SyslogDataEntry data_entry = new SyslogDataEntryBuilder()
-//                    .setIpaddr(ipaddr)
-//                    .setMessage(message)
-//                    .setSyslogId(str_sequenceid)
-//                    .build();
-//
-//            transaction.put(LogicalDatastoreType.OPERATIONAL, iid, data_entry);
-//            try {
-//                transaction.submit().checkedGet();
-//            } catch (TransactionCommitFailedException e) {
-//                e.printStackTrace();
-//            }
-//        }
 
         public List<SyslogFilter> getFilters() {
             ReadTransaction transaction = db.newReadOnlyTransaction();
@@ -362,7 +422,6 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
                         //Match
                         LOG.debug("match meet");
                         nodes.addAll(getListenerList(filter.getFilterId()));
-
                     }else {
                         LOG.debug("mismatch");
                     }
