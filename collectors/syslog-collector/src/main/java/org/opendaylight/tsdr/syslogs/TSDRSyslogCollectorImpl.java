@@ -30,8 +30,8 @@ import java.util.LinkedList;
  * @author Quentin Chen(quentin.chen@foxmail.com)
  **/
 public class TSDRSyslogCollectorImpl extends Thread implements BindingAwareProvider{
-    public static final int UDP_PORT = 514;
-    public static final int TCP_PORT = 513;
+    public static final int UDP_PORT = 8089;
+    public static final int TCP_PORT = 8088;
     public static final long QUEUE_WAIT_INTERVAL = 2000;
     public static final long STORE_FLUSH_INTERVAL = 2500;
 
@@ -62,6 +62,7 @@ public class TSDRSyslogCollectorImpl extends Thread implements BindingAwareProvi
     public TSDRSyslogCollectorImpl(TsdrCollectorSpiService _collectorSPIService) {
         super("TSDR Syslog Listener");
         this.collectorSPIService = _collectorSPIService;
+        this.manager=SyslogDatastoreManager.getInstance();
     }
 
     public void setUdpPort(int udpPort) {
@@ -76,6 +77,10 @@ public class TSDRSyslogCollectorImpl extends Thread implements BindingAwareProvi
         return this.running;
     }
 
+    public void setManager(SyslogDatastoreManager manager) {
+        this.manager = manager;
+    }
+
     /**
      * initiated when the data binding broker is registered
      * in TSDRSyslogModule
@@ -86,10 +91,11 @@ public class TSDRSyslogCollectorImpl extends Thread implements BindingAwareProvi
         this.setDaemon(true);
 
         //set the datastore manager
+        //for unit test, this part should be annotated
 
         this.dataBroker=session.getSALService(DataBroker.class);
-        this.manager=SyslogDatastoreManager.getInstance();
-        manager.setDataBroker(dataBroker);
+
+        this.manager.setDataBroker(dataBroker);
         logger.info("Datastore Manager Setup Done");
         this.syslogsvrService = session.addRpcImplementation(TsdrSyslogCollectorService.class, manager);
         logger.info("Register SyslogsvrService to Session.");
@@ -109,8 +115,8 @@ public class TSDRSyslogCollectorImpl extends Thread implements BindingAwareProvi
             tcpServer.startServer();
             new SyslogProcessor(this.tcpMessageList).start();
         } catch (Exception e) {
-            e.printStackTrace();
             logger.error(e.getMessage());
+            this.close();
         }
         logger.info("TCP server started at port: " + tcpPort + ".");
 
@@ -121,35 +127,22 @@ public class TSDRSyslogCollectorImpl extends Thread implements BindingAwareProvi
             udpServer.setPort(udpPort);
             udpServer.setIncomingSyslogs(this.udpPacketList);
             udpServer.startServer();
-//            this.start();
             new SyslogProcessor(this.udpPacketList).start();
         } catch (Exception e) {
-            e.printStackTrace();
             logger.error(e.getMessage());
+            this.close();
         }
         logger.info("UDP server started at port: " + udpPort + ".");
-
-//        try{
-//            socket = new DatagramSocket(this.selectedPort);
-//            logger.info("Syslog collector started on listening on " +
-//                    "port " + this.selectedPort);
-//            this.start();
-//            new SyslogProcessor().start();
-//        }catch(Exception err){
-//            logger.error("Failed to bind to port "
-//                    + this.selectedPort +
-//                    ", syslog collector will shutdonw.",err);
-//            running = false;
-//        }
-    }
-
-
-    public void run(){
     }
 
     public void close(){
         running = false;
-        socket.close();
+        try {
+            tcpServer.stopServer();
+            udpServer.stopServer();
+        }catch (InterruptedException e){
+            logger.error(e.getMessage());
+        }
     }
 
     private class SyslogProcessor extends Thread {

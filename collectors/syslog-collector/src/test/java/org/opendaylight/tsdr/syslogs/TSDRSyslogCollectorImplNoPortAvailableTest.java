@@ -7,29 +7,59 @@
  */
 package org.opendaylight.tsdr.syslogs;
 
-import java.io.IOException;
-import java.net.DatagramSocket;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.sal.binding.api.BindingAwareBroker;
+import org.opendaylight.tsdr.syslogs.server.datastore.SyslogDatastoreManager;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.collector.spi.rev150915.TsdrCollectorSpiService;
 
+import java.io.IOException;
 
 /**
- * @author Sharon Aicler(saichler@gmail.com)
- **/
+ * Description:
+ * Created by Quentin(quentin.chen@foxmail.com) on 16/6/25.
+ */
 public class TSDRSyslogCollectorImplNoPortAvailableTest {
+    private TsdrCollectorSpiService spiService = Mockito.mock(TsdrCollectorSpiService.class);
+    private TSDRSyslogCollectorImpl impl;
+    private BindingAwareBroker.ProviderContext session = Mockito.mock(BindingAwareBroker.ProviderContext.class);
+    private DataBroker dataBroker = Mockito.mock(DataBroker.class);
+    private SyslogDatastoreManager manager = Mockito.mock(SyslogDatastoreManager.class);
+
+    @Before
+    public void setup() {
+        Mockito.when(session.getSALService(DataBroker.class)).thenReturn(dataBroker);
+        impl = new TSDRSyslogCollectorImpl(spiService);
+        impl.setManager(manager);
+    }
 
     @Test
-    public void testFailToBindToPorts() throws IOException, InterruptedException {
-        DatagramSocket socket1 = null;
-        //Just make sure the ports are occupied
-        try{
-            socket1 = new DatagramSocket(TSDRSyslogCollectorImpl.UDP_PORT);
-        }catch(Exception e){
-            /*Don't care */
+    public void testFailToBindToUDPPorts() throws IOException, InterruptedException {
+        //To make sure the port is not available
+        impl.setUdpPort(80);
+
+        try {
+            impl.onSessionInitiated(session);
+        }catch (Exception e){
+            //Nothing to do with
         }
-        TSDRSyslogCollectorImpl impl = new  TSDRSyslogCollectorImpl(null);
+
         Assert.assertTrue(!impl.isRunning());
-        if(socket1!=null)
-            socket1.close();
+    }
+
+    @Test
+    public void testFailToBindToTCPPorts() throws IOException, InterruptedException {
+        //To make sure the port is not available
+        impl.setTcpPort(81);
+
+        try {
+            impl.onSessionInitiated(session);
+        }catch (Exception e){
+            //Nothing to do with
+        }
+        Assert.assertTrue(!impl.isRunning());
     }
 }

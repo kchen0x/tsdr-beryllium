@@ -16,6 +16,7 @@ import java.net.UnknownHostException;
 
 /**
  * @author Sharon Aicler(saichler@gmail.com)
+ * @author Quentin Chen(quentin.chen@foxmail.com)
  **/
 /*
     This is a Syslog Generator for testing purposes
@@ -24,8 +25,8 @@ public class SyslogGenerator {
     private final DatagramSocket socket;
     private final InetAddress destHost;
     private final int destPort;
-    public static final int DEFAULT_SYSLOG_PORT = 514;
-    public static final int ALTERNAT_SYSLOG_PORT = 1514;
+    public static final int DEFAULT_SYSLOG_PORT = 8089;
+    public static final int ALTERNAT_SYSLOG_PORT = 8089;
 
     public SyslogGenerator(String destHost,int destinationPort) throws SocketException, UnknownHostException {
         this.destPort = destinationPort;
@@ -40,6 +41,7 @@ public class SyslogGenerator {
                 byte data[] = syslogMessageText.getBytes();
                 DatagramPacket packet = new DatagramPacket(data, data.length, destHost, destPort);
                 socket.send(packet);
+                System.out.println(syslogMessageText + " has been sent.");
                 Thread.sleep(delayBetweenSyslogs);
             }
             Thread.sleep(delayBetweenIterations);
@@ -57,17 +59,17 @@ public class SyslogGenerator {
     public static void main(String args[]){
         if(args==null){
             //Will add more usages in the future
-            System.out.println("Usage: sendSyslog <message> - Send syslog to local host on port 514");
-            System.out.println("       sendSyslog <message> <count> - Send <count> syslog to local host on port 514");
+            System.out.println("Usage: sendSyslog <message> - Send syslog to local host on port 8089");
+            System.out.println("       sendSyslog <message> <count> - Send <count> syslog to local host on port 8089");
             System.out.println("       sendSyslog <message> <host> <port> - Send syslog to <host> on <port>");
         }
         try {
             if(args.length==1) {
-                SyslogGenerator generator = new SyslogGenerator("127.0.0.1",514);
+                SyslogGenerator generator = new SyslogGenerator("127.0.0.1",8089);
                 generator.sendSyslog(args[0]);
             }else
             if(args.length==2){
-                SyslogGenerator generator = new SyslogGenerator("127.0.0.1",514);
+                SyslogGenerator generator = new SyslogGenerator("127.0.0.1",8089);
                 for(int i=0;i<Integer.parseInt(args[1]);i++){
                     generator.sendSyslog(""+i+":"+args[0]);
                     Thread.sleep(100);

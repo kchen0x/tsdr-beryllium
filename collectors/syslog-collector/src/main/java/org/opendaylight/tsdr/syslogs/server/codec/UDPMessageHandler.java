@@ -32,12 +32,14 @@ public class UDPMessageHandler extends SimpleChannelInboundHandler<DatagramPacke
     protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
         String s = msg.content().toString(CharsetUtil.UTF_8);
         String ipaddress = msg.sender().getAddress().getHostAddress();
-        manager.execute(ipaddress,s);
+        //TODO implement proper decoder to create new message
         Message message =  new Message.MessageBuilder().create()
                 .content(s)
                 .hostname(ipaddress)
                 .build();
         incomingSyslogs.add(message);
+        //for unit test, this part should be annotated
+        manager.execute(ipaddress,message);
     }
 
     public void setIncomingSyslogs(LinkedList<Message> incomingSyslogs) {

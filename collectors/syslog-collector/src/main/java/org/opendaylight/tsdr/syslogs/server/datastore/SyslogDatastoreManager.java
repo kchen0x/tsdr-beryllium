@@ -78,7 +78,7 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
         }
     }
 
-    public void execute(String ipaddress, String message) {
+    public void execute(String ipaddress, Message message) {
         int mid = SyslogDatastoreManager.messageID.addAndGet(1);
         INSTANCE.threadpool.execute(new WorkerThread(mid, ipaddress, message));
     }
@@ -256,9 +256,9 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
     class WorkerThread implements Runnable {
         private final int mid;
         private final String ipaddr;
-        private final String message;
+        private final Message message;
 
-        public WorkerThread(int mid, String ipaddr, String message) {
+        public WorkerThread(int mid, String ipaddr, Message message) {
             this.mid = mid;
             this.ipaddr = ipaddr;
             this.message = message;
@@ -341,7 +341,7 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
                         baseIID.child(SyslogListener.class, new SyslogListenerKey(listenerUUID));
                 SyslogListener listener = new SyslogListenerBuilder()
                         .setListenerId(listenerUUID)
-                        .setSyslogMessage(message)
+                        .setSyslogMessage(message.getContent())
                         .build();
                 transaction.put(LogicalDatastoreType.OPERATIONAL,iid,listener);
             }
@@ -351,22 +351,20 @@ public class SyslogDatastoreManager implements TsdrSyslogCollectorService,DataCh
 
         @Override
         public void run() {
-
-            //TODO: implement new Message Decoder
-            Message msg = MessageDecoder.decode(this.message);
+            Message msg = this.message;
             List<Listener> nodes = new ArrayList<>();
-            if (msg != null) {
+            if (msg != null && this.getFilters() != null) {
                 List<SyslogFilter> filters = this.getFilters();
                 for (SyslogFilter filter : filters) {
                     MessageFilter messageFilter = MessageFilter.FilterBuilder.create(filter.getFilterEntity());
-                    LOG.info("before equals");
+                    LOG.debug("before equals");
                     if (messageFilter.equals(msg)) {
                         //Match
-                        LOG.info("match meet");
+                        LOG.debug("match meet");
                         nodes.addAll(getListenerList(filter.getFilterId()));
 
                     }else {
-                        LOG.info("mismatch");
+                        LOG.debug("mismatch");
                     }
                 }
             }
